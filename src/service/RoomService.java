@@ -2,10 +2,13 @@ package service;
 
 import dao.RoomDAO;
 import model.Room;
+import util.LoggerUtil;
+import java.util.logging.Logger;
 
 import java.util.List;
 
 public class RoomService {
+    private static final Logger logger = LoggerUtil.getLogger();
 
     private RoomDAO roomDAO;
 
@@ -46,8 +49,15 @@ public class RoomService {
             System.out.println("Room already exists.");
             return false;
         }
+        boolean added = roomDAO.addRoom(room);
 
-        return roomDAO.addRoom(room);
+        if (added) {
+            logger.info("Room added successfully. Room Number: " + room.getRoomNumber());
+        } else {
+            logger.warning("Failed to add room. Room Number: " + room.getRoomNumber());
+        }
+
+        return added;
     }
 
     // ==========================
@@ -64,7 +74,15 @@ public class RoomService {
             return false;
         }
 
-        return roomDAO.updateRoom(room);
+        boolean updated = roomDAO.updateRoom(room);
+
+        if (updated) {
+            logger.info("Room updated successfully. Room Number: " + room.getRoomNumber());
+        } else {
+            logger.warning("Failed to update room. Room Number: " + room.getRoomNumber());
+        }
+
+        return updated;
     }
 
     // ==========================
@@ -77,7 +95,15 @@ public class RoomService {
             return false;
         }
 
-        return roomDAO.deleteRoom(roomNumber);
+        boolean deleted = roomDAO.deleteRoom(roomNumber);
+
+        if (deleted) {
+            logger.info("Room deleted successfully. Room Number: " + roomNumber);
+        } else {
+            logger.warning("Failed to delete room. Room Number: " + roomNumber);
+        }
+
+        return deleted;
     }
 
     // ==========================
@@ -172,4 +198,22 @@ public class RoomService {
 
         return count;
     }
+    public List<Room> getRoomsByType(String roomType) {
+
+        return roomDAO.getRoomsByType(roomType);
+
+    }public List<Room> getAvailableRooms() {
+
+        return roomDAO.getAvailableRooms();
+
+    }public boolean updateRoomStatus(int roomId, String status) {
+
+        return roomDAO.updateRoomStatus(roomId, status);
+
+    }public Room getRoomById(int roomId) {
+
+        return roomDAO.getRoomById(roomId);
+
+    }
 }
+

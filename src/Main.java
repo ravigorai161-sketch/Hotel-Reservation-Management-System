@@ -1,4 +1,7 @@
+import gui.LoginFrame;
 import ui.LoginMenu;
+import com.formdev.flatlaf.FlatLightLaf;
+import javax.swing.UIManager;
 
 public class Main {
 
@@ -8,8 +11,14 @@ public class Main {
         System.out.println("      HOTEL RESERVATION SYSTEM          ");
         System.out.println("========================================");
 
-        LoginMenu loginMenu = new LoginMenu();
-        loginMenu.start();
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        new LoginFrame();
+
 
         System.out.println("========================================");
         System.out.println("    Thank You For Using Our System      ");

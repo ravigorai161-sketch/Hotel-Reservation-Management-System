@@ -2,9 +2,16 @@ package dao;
 
 import model.Reservation;
 import util.DBConnection;
+import dao.CustomerDAO;
+import dao.RoomDAO;
+import invoice.InvoiceGenerator;
+import model.Customer;
+import model.Payment;
+import model.Room;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,14 +22,14 @@ public class ReservationDAO {
     // ==========================
     public boolean bookRoom(Reservation reservation) {
 
-        if (!isRoomAvailable(
-                reservation.getRoomId(),
-                reservation.getCheckIn().toLocalDate(),
-                reservation.getCheckOut().toLocalDate())) {
+      //  if (!isRoomAvailable(
+       //         reservation.getRoomId(),
+       //         reservation.getCheckIn().toLocalDate(),
+      //          reservation.getCheckOut().toLocalDate())) {
 
-            System.out.println("Room is not available for the selected dates.");
-            return false;
-        }
+        //    System.out.println("Room is not available for the selected dates.");
+        //    return false;
+     //   }
 
         String sql = "INSERT INTO reservations(customer_id, room_id, check_in, check_out) VALUES(?,?,?,?)";
 
@@ -288,15 +295,6 @@ public class ReservationDAO {
             return false;
         }
 
-        if (!isRoomAvailable(
-                reservation.getRoomId(),
-                reservation.getCheckIn().toLocalDate(),
-                reservation.getCheckOut().toLocalDate())) {
-
-            System.out.println("Room is not available for the selected dates.");
-            return false;
-        }
-
         String sql = "UPDATE reservations SET customer_id=?, room_id=?, check_in=?, check_out=? WHERE reservation_id=?";
 
         try (Connection con = DBConnection.getConnection();
@@ -514,20 +512,48 @@ public class ReservationDAO {
             paymentPs.setString(4, "Paid");
 
             paymentPs.executeUpdate();
+            // Generate Invoice
+            Customer customer = new CustomerDAO().getCustomerById(
+                    reservation.getCustomerId());
+
+            Room room = new RoomDAO().getRoomById(
+                    reservation.getRoomId());
+
+            Payment payment = new Payment();
+            payment.setReservationId(reservationId);
+            payment.setTotalAmount(totalAmount);
+            payment.setPaymentMethod("Cash");
+            payment.setPaymentStatus("Paid");
+
+            InvoiceGenerator.generateInvoice(
+                    customer,
+                    room,
+                    reservation,
+                    payment
+            );
 
             // Room Available Again
             updateRoomStatus(reservation.getRoomId(), "Available");
 
-            // Delete reservation (stay completed)
-            String deleteSql =
-                    "DELETE FROM reservations WHERE reservation_id=?";
+            // Delete check-in record first
+            String deleteCheckinSql =
+                    "DELETE FROM checkins WHERE reservation_id=?";
 
-            PreparedStatement deletePs =
-                    con.prepareStatement(deleteSql);
+            PreparedStatement checkinPs =
+                    con.prepareStatement(deleteCheckinSql);
 
-            deletePs.setInt(1, reservationId);
+            checkinPs.setInt(1, reservationId);
 
-            deletePs.executeUpdate();
+            checkinPs.executeUpdate();
+
+            String deleteCheckInSql =
+                    "DELETE FROM checkins WHERE reservation_id=?";
+
+            PreparedStatement checkInDeletePs =
+                    con.prepareStatement(deleteCheckInSql);
+
+            checkInDeletePs.setInt(1, reservationId);
+            checkInDeletePs.executeUpdate();
 
             con.commit();
 
@@ -573,16 +599,18 @@ public class ReservationDAO {
             return 0;
         }
 
-        long days =
-                reservation.getCheckOut().toLocalDate().toEpochDay()
-                        - reservation.getCheckIn().toLocalDate().toEpochDay();
+        long days = ChronoUnit.DAYS.between(
+                reservation.getCheckIn().toLocalDate(),
+                reservation.getCheckOut().toLocalDate()
+        );
 
-        if (days <= 0)
+        if (days <= 0) {
             days = 1;
+        }
 
         double roomPrice = 0;
 
-        String sql = "SELECT price FROM rooms WHERE room_id=?";
+        String sql = "SELECT price FROM rooms WHERE room_id = ?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -592,9 +620,7 @@ public class ReservationDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 roomPrice = rs.getDouble("price");
-
             }
 
         } catch (SQLException e) {
@@ -603,7 +629,6 @@ public class ReservationDAO {
 
         return roomPrice * days;
     }
-
     // ==========================
     // Is Guest Checked In?
     // ==========================

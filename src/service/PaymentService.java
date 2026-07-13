@@ -2,11 +2,14 @@ package service;
 
 import dao.PaymentDAO;
 import model.Payment;
+import util.LoggerUtil;
+import java.util.logging.Logger;
 
 import java.sql.Date;
 import java.util.List;
 
 public class PaymentService {
+    private static final Logger logger = LoggerUtil.getLogger();
 
     private PaymentDAO paymentDAO;
 
@@ -21,16 +24,19 @@ public class PaymentService {
 
         if (payment == null) {
             System.out.println("Payment cannot be null.");
+            logger.warning("Failed to add payment: Payment object is null.");
             return false;
         }
 
         if (payment.getReservationId() <= 0) {
             System.out.println("Invalid Reservation ID.");
+            logger.warning("Failed to add payment: Invalid Reservation ID.");
             return false;
         }
 
         if (payment.getTotalAmount() <= 0) {
             System.out.println("Amount must be greater than 0.");
+            logger.warning("Failed to add payment: Invalid amount.");
             return false;
         }
 
@@ -38,6 +44,7 @@ public class PaymentService {
                 payment.getPaymentMethod().trim().isEmpty()) {
 
             System.out.println("Payment method is required.");
+            logger.warning("Failed to add payment: Payment method is empty.");
             return false;
         }
 
@@ -47,9 +54,20 @@ public class PaymentService {
             payment.setPaymentStatus("Pending");
         }
 
-        return paymentDAO.addPayment(payment);
-    }
+        boolean added = paymentDAO.addPayment(payment);
 
+        if (added) {
+            logger.info("Payment added successfully. Reservation ID: "
+                    + payment.getReservationId()
+                    + ", Amount: ₹" + payment.getTotalAmount()
+                    + ", Status: " + payment.getPaymentStatus());
+        } else {
+            logger.warning("Failed to add payment. Reservation ID: "
+                    + payment.getReservationId());
+        }
+
+        return added;
+    }
     // ==========================
     // Get Payment By ID
     // ==========================

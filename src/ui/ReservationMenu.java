@@ -1,6 +1,7 @@
 package ui;
 
 import model.Reservation;
+import validation.Validator;
 import service.ReservationService;
 
 import java.sql.Date;
@@ -85,29 +86,56 @@ public class ReservationMenu {
         Reservation reservation = new Reservation();
 
         System.out.print("Customer ID: ");
-        reservation.setCustomerId(scanner.nextInt());
+        int customerId = scanner.nextInt();
 
-        System.out.print("Room ID: ");
-        reservation.setRoomId(scanner.nextInt());
-        scanner.nextLine();
-
-        System.out.print("Check-In Date (yyyy-mm-dd): ");
-        reservation.setCheckIn(Date.valueOf(scanner.nextLine()));
-
-        System.out.print("Check-Out Date (yyyy-mm-dd): ");
-        reservation.setCheckOut(Date.valueOf(scanner.nextLine()));
-
-        if (reservationService.bookRoom(reservation)) {
-
-            System.out.println("\nRoom Booked Successfully.");
-
-        } else {
-
-            System.out.println("\nBooking Failed.");
-
+        if (customerId <= 0) {
+            System.out.println("Invalid Customer ID.");
+            return;
         }
 
-    }    // ==========================
+        reservation.setCustomerId(customerId);
+
+        System.out.print("Room ID: ");
+        int roomId = scanner.nextInt();
+
+        if (roomId <= 0) {
+            System.out.println("Invalid Room ID.");
+            return;
+        }
+
+        reservation.setRoomId(roomId);
+
+        scanner.nextLine();
+
+        try {
+
+            System.out.print("Check-In Date (yyyy-mm-dd): ");
+            Date checkIn = Date.valueOf(scanner.nextLine());
+
+            System.out.print("Check-Out Date (yyyy-mm-dd): ");
+            Date checkOut = Date.valueOf(scanner.nextLine());
+
+            if (!checkOut.after(checkIn)) {
+                System.out.println("Check-Out must be after Check-In.");
+                return;
+            }
+
+            reservation.setCheckIn(checkIn);
+            reservation.setCheckOut(checkOut);
+
+        } catch (IllegalArgumentException e) {
+
+            System.out.println("Invalid Date Format.");
+            return;
+        }
+
+        if (reservationService.bookRoom(reservation)) {
+            System.out.println("Room Booked Successfully.");
+        } else {
+            System.out.println("Booking Failed.");
+        }
+    }
+      // ==========================
     // View All Reservations
     // ==========================
 
@@ -147,6 +175,11 @@ public class ReservationMenu {
         System.out.print("Enter Reservation ID: ");
 
         int reservationId = scanner.nextInt();
+
+        if (reservationId <= 0) {
+            System.out.println("Invalid Reservation ID.");
+            return;
+        }
         scanner.nextLine();
 
         Reservation reservation =
@@ -196,11 +229,27 @@ public class ReservationMenu {
         reservation.setRoomId(scanner.nextInt());
         scanner.nextLine();
 
-        System.out.print("New Check-In Date (yyyy-mm-dd): ");
-        reservation.setCheckIn(java.sql.Date.valueOf(scanner.nextLine()));
+        try {
 
-        System.out.print("New Check-Out Date (yyyy-mm-dd): ");
-        reservation.setCheckOut(java.sql.Date.valueOf(scanner.nextLine()));
+            System.out.print("New Check-In Date (yyyy-mm-dd): ");
+            Date checkIn = Date.valueOf(scanner.nextLine());
+
+            System.out.print("New Check-Out Date (yyyy-mm-dd): ");
+            Date checkOut = Date.valueOf(scanner.nextLine());
+
+            if (!checkOut.after(checkIn)) {
+                System.out.println("Check-Out must be after Check-In.");
+                return;
+            }
+
+            reservation.setCheckIn(checkIn);
+            reservation.setCheckOut(checkOut);
+
+        } catch (IllegalArgumentException e) {
+
+            System.out.println("Invalid Date Format.");
+            return;
+        }
 
         if (reservationService.updateReservation(reservation)) {
 
@@ -223,6 +272,11 @@ public class ReservationMenu {
         System.out.print("Enter Reservation ID: ");
 
         int reservationId = scanner.nextInt();
+
+        if (reservationId <= 0) {
+            System.out.println("Invalid Reservation ID.");
+            return;
+        }
         scanner.nextLine();
 
         if (reservationService.cancelReservation(reservationId)) {
@@ -244,6 +298,11 @@ public class ReservationMenu {
         System.out.print("Enter Reservation ID: ");
 
         int reservationId = scanner.nextInt();
+
+        if (reservationId <= 0) {
+            System.out.println("Invalid Reservation ID.");
+            return;
+        }
         scanner.nextLine();
 
         if (reservationService.checkIn(reservationId)) {
@@ -265,16 +324,19 @@ public class ReservationMenu {
     private void checkOut() {
 
         System.out.print("Enter Reservation ID: ");
-
         int reservationId = scanner.nextInt();
         scanner.nextLine();
+
+        if (reservationId <= 0) {
+            System.out.println("Invalid Reservation ID.");
+            return;
+        }
+
+        double bill = reservationService.calculateBill(reservationId);
 
         if (reservationService.checkOut(reservationId)) {
 
             System.out.println("Check-Out Successful.");
-
-            double bill = reservationService.calculateBill(reservationId);
-
             System.out.println("Total Bill : ₹" + bill);
 
         } else {
@@ -282,7 +344,6 @@ public class ReservationMenu {
             System.out.println("Check-Out Failed.");
 
         }
-
     }
 
 }

@@ -133,7 +133,86 @@ public class RoomDAO {
         }
 
         return null;
-    }public Room getRoomById(int roomId) {
+    }
+
+    public List<Room> getRoomsByType(String roomType) {
+
+        List<Room> rooms = new ArrayList<>();
+
+        String sql = "SELECT * FROM rooms WHERE room_type = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, roomType);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Room room = new Room();
+
+                room.setRoomId(rs.getInt("room_id"));
+                room.setRoomNumber(rs.getInt("room_number"));
+                room.setRoomType(rs.getString("room_type"));
+                room.setPrice(rs.getDouble("price"));
+                room.setStatus(rs.getString("status"));
+
+                rooms.add(room);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }public List<Room> getAvailableRooms() {
+
+        List<Room> rooms = new ArrayList<>();
+
+        String sql = "SELECT * FROM rooms WHERE status = 'Available'";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                Room room = new Room();
+
+                room.setRoomId(rs.getInt("room_id"));
+                room.setRoomNumber(rs.getInt("room_number"));
+                room.setRoomType(rs.getString("room_type"));
+                room.setPrice(rs.getDouble("price"));
+                room.setStatus(rs.getString("status"));
+
+                rooms.add(room);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }public boolean updateRoomStatus(int roomId, String status) {
+
+        String sql = "UPDATE rooms SET status = ? WHERE room_id = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            ps.setInt(2, roomId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public Room getRoomById(int roomId) {
 
         String sql = "SELECT * FROM rooms WHERE room_id = ?";
 
@@ -157,11 +236,10 @@ public class RoomDAO {
                 return room;
             }
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
     }
 }
-

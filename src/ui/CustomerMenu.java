@@ -1,5 +1,6 @@
 package ui;
 
+import validation.Validator;
 import model.Customer;
 import service.CustomerService;
 
@@ -63,20 +64,55 @@ public class CustomerMenu {
         Customer customer = new Customer();
 
         System.out.print("Name: ");
-        customer.setName(scanner.nextLine());
+        String name = scanner.nextLine();
+
+        if (!Validator.isValidName(name)) {
+
+            System.out.println("Invalid Name.");
+            return;
+        }
+
+        customer.setName(name);
 
         System.out.print("Age: ");
-        customer.setAge(scanner.nextInt());
+        int age = scanner.nextInt();
         scanner.nextLine();
+
+        if (!Validator.isValidAge(age)) {
+
+            System.out.println("Age must be between 18 and 120.");
+            return;
+        }
+
+        customer.setAge(age);
 
         System.out.print("Gender: ");
         customer.setGender(scanner.nextLine());
 
         System.out.print("Phone: ");
-        customer.setPhone(scanner.nextLine());
+        String phone = scanner.nextLine();
+
+        if (!Validator.isValidPhone(phone)) {
+
+            System.out.println("Invalid Phone Number.");
+            return;
+        }
+
+        customer.setPhone(phone);
 
         System.out.print("Email: ");
-        customer.setEmail(scanner.nextLine());
+        String email = scanner.nextLine();
+
+        if (!Validator.isValidEmail(email)) {
+
+            System.out.println("Invalid Email.");
+            return;
+        }
+
+        customer.setEmail(email);
+
+        System.out.print("Address: ");
+        customer.setAddress(scanner.nextLine());
 
         if (customerService.addCustomer(customer)) {
             System.out.println("Customer Added Successfully.");
